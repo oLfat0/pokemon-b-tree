@@ -8,6 +8,22 @@ ou que satisfaz as seguintes condições:
 (iii) cada nó possui no máximo 2d + 1 filhos;
 (iv) todas as folhas estão no mesmo nível.
 
+
+Um nó de uma árvore B é chamado página. Uma página armazena então diversos nós da tabela original. A estrutura
+apresentada satisfaz ainda as propriedades seguintes.
+
+(a) Seja m o número de chaves em uma página P NÃO folha. Então P tem m + 1 filhos. Consequentemente, cada página
+possui entre d e 2d chaves, exceto o nó raiz, que possui entre 1 e 2d chaves.
+
+(b) Em cada página P, as chaves estão ordenadas: s1, …, sm, d ≤ m ≤ 2d, exceto para a raíz onde 1 ≤ m ≤ 2d. 
+E mais, P contém m + 1 ponteiros p0, p1, …, pm para os filhos de P. Nas páginas correspondentes às folhas, 
+esses ponteiros indicam λ.
+
+(c) Seja uma página P com m chaves:
+    - para qualquer chave y, pertencente à página apontada por p0, y < s1;
+    - para qualquer chave y, pertencente à página apontada por pk, 1 ≤ k ≤ m – 1, sk < y < sk+1;
+    - para qualquer chave y, pertencente à página apontada por pm, y > sm.
+
 */
 
 #include <stdio.h>
@@ -24,17 +40,18 @@ typedef struct no
 }No;
 
 No* novo_no(int n);
-void menu();
-void busca(No* pt, char *x[]);
+int menu();
+int busca(No* pt, char *x);
 void insere(No* raiz, char nome[]);
 
 No* raiz = NULL;
 
-int main()
-{
+int main(){
     while (1)
     {
-        menu();
+        if(menu()==9){
+            break;
+        }
     }
 }
 
@@ -54,34 +71,40 @@ No* novo_no(int n){
     return novo;
 }
 
-void menu(){
-    int i= 0;
+int menu(){
+    int i = 0;
     printf("// ----- // ----- // ARVORE B // ----- // ----- //\n");
     printf("[1] - Buscar\n");
     printf("[2] - Inserir\n");
     printf("[9] - Finalizar\n");
-    scanf("%d",&i);
-    if(i == 1)
-    {
-        char nome[20];
-        printf("Digite o nome do pokemon: ");
-        scanf("%s",nome);
-        busca(raiz,nome);
-    } 
-    if(i == 2)
-    {
-        //insere();
-    }
-    if(i == 9)
-    {
 
+    scanf("%d",&i);
+    if(i == 1){
+        char nome[20];
+        printf("Digite o nome do Pokemon: ");
+        scanf("%s", nome);
+        busca(raiz, nome);
+        return i;
+    } 
+
+    else if(i == 2){
+        //insere();
+        return i;
+    }
+    else if(i == 9){
+        printf("Finalizando programa...\n");
+        return i;
+    }
+    else{
+        printf("Digite um valor válido\n");
+        return 0;
     }
 }
 
-void busca(No* pt, char *x){
+int busca(No* pt, char *x){
     if(pt == NULL){
         printf("Elemento nao encontrado\n");
-        return;
+        return 0;
     }
 
     int i = 0;
@@ -94,21 +117,25 @@ void busca(No* pt, char *x){
 
     if(strcmp(x, pt->chaves[i])==0){
         printf("Elemento encontrado!\n");
-        return;
+        return 1;
     }
 
     busca(pt->filhos[i], x);
 }
 
-void insere(No* raiz, char *nome){
-    if(raiz==NULL){                 //Caso a árvore seja vazia
-        raiz->chaves[0] = nome;
+void insere(No* pt, char *nome){
+    if(pt==NULL){                   //Caso a árvore seja vazia
+        pt->chaves[0] = nome;
     }
 
-    int i=0;
-    while(raiz->chaves[i]!='\0'){
-        if(strcmp(raiz->chaves[i], nome) == 0){
+    No* novo = novo_no(1);
+    novo->chaves[0] = nome;
 
+    int i=0;
+    while(pt->chaves[i]!='\0'){     // Enquanto a chave[i] NÃO estiver vazia:
+
+        if(busca(pt, nome) == 0){
+            pt->chaves[i] = nome;
         }
     }
 }
