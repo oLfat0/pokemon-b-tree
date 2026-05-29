@@ -42,7 +42,7 @@ typedef struct no
 No* novo_no(int n);
 int menu();
 int busca(No* pt, char *x);
-void insere(No* raiz, char nome[]);
+void insere(No* raiz, char *nome);
 
 No* raiz = NULL;
 
@@ -109,33 +109,54 @@ int busca(No* pt, char *x){
 
     int i = 0;
 
-    while(i < pt->n){
-        if(strcmp(x, pt->chaves[i])>0){
-            i++;
-        }
+    while(i < pt->n && strcmp(x, pt->chaves[i])>0){     //Vai percorrendo a chave (Esq->Dir)
+        i++;
     }
 
-    if(strcmp(x, pt->chaves[i])==0){
+    if(i < pt->n && strcmp(x, pt->chaves[i])==0){
         printf("Elemento encontrado!\n");
         return 1;
     }
 
-    busca(pt->filhos[i], x);
+    busca(pt->filhos[i], x);                            //Desce para o filho[i]
 }
 
 void insere(No* pt, char *nome){
     if(pt==NULL){                   //Caso a árvore seja vazia
         pt->chaves[0] = nome;
+        printf("Elemento '%s' inserido na primeira posicao da raiz...\n", nome);
+        return;
     }
 
-    No* novo = novo_no(1);
-    novo->chaves[0] = nome;
+    //Função Busca():
+    int i = 0;
 
-    int i=0;
-    while(pt->chaves[i]!='\0'){     // Enquanto a chave[i] NÃO estiver vazia:
+    while(i < pt->n && strcmp(nome, pt->chaves[i])>0){     //Vai percorrendo a chave (Esq->Dir)
+        i++;
+    }
 
-        if(busca(pt, nome) == 0){
-            pt->chaves[i] = nome;
-        }
+    if(i < pt->n && strcmp(nome, pt->chaves[i])==0){
+        printf("Elemento ja se encontra na arvore. Nenhuma acao necessaria...\n");
+        return;
+    }
+    
+
+    insere(pt->filhos[i], nome);  //Desce para o filho[i]
+}
+
+void add_key(No* pt, char *key){
+    int nmr = pt->n;                                    //Número de chaves no Nó
+
+    for(int i=0; i<nmr; i++){
+        if(strcmp(key, pt->chaves[i])<0 && nmr<D){      //caso a key seja MENOR que os valores da chave no Nó && ainda haja espaço no nó para adicionar novas chaves
+            
+            for(int j=nmr; j>i; j--){
+                pt->chaves[j] = pt->chaves[j-1];
+            }
+
+            pt->chaves[i] = key;                        //Adicionar na posição i após mover todos os outros elementos para a direita
+            pt->n++;
+            return;
+        }       
     }
 }
