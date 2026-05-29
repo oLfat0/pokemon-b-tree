@@ -145,10 +145,14 @@ void insere(No* pt, char *nome){
 }
 
 void add_key(No* pt, char *key){
+    /*
+    Função responsável por organizar a posição da nova chave inserida de forma ordenada 
+    em determinado Nó pt
+    */
     int nmr = pt->n;                                    //Número de chaves no Nó
 
     for(int i=0; i<nmr; i++){
-        if(strcmp(key, pt->chaves[i])<0 && nmr<D){      //caso a key seja MENOR que os valores da chave no Nó && ainda haja espaço no nó para adicionar novas chaves
+        if(strcmp(key, pt->chaves[i])<0 && nmr<D){      //Caso a key seja MENOR que os valores da chave no Nó && ainda haja espaço no nó para adicionar novas chaves
             
             for(int j=nmr; j>i; j--){
                 pt->chaves[j] = pt->chaves[j-1];
