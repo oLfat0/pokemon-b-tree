@@ -33,7 +33,7 @@ esses ponteiros indicam λ.
 
 typedef struct no
 {
-    int n;                      //Quantidade de chaves no Nó
+    int n;                        //Quantidade de chaves no Nó
     char *chaves[2*D];            //Lista de String -> Cada chave é uma String
     struct no* filhos[2*D+1];
 
@@ -44,14 +44,14 @@ int menu();
 int busca(No* pt, char *x);
 void insere(No* pai, No* pt, char *nome);
 int add_key(No* pt, char *key);
-void split(No* pai, No* pt,  char *key);
+void split(No* pai, No* pt,  char *key);        //No livro do Jayme ele define essa função como 'cisão'
 
 No* raiz = NULL;
 
 int main(){
     while (1)
     {
-        if(menu()==9){
+        if(menu()==9){      //Caso o usuário selecione a opção '[9] - Finalizar'
             break;
         }
     }
@@ -90,7 +90,10 @@ int menu(){
     } 
 
     else if(i == 2){
-        //insere();
+        char nome[20];
+        printf("Digite o nome do Pokemon a inserir: ");
+        scanf("%s", nome);
+        insere(NULL, raiz, nome);   // Inicia com pai = NULL
         return i;
     }
     else if(i == 9){
@@ -98,14 +101,14 @@ int menu(){
         return i;
     }
     else{
-        printf("Digite um valor válido\n");
+        printf("Digite um valor valido >:(\n");
         return 0;
     }
 }
 
 int busca(No* pt, char *x){
     if(pt == NULL){
-        printf("Elemento nao encontrado\n");
+        printf("Pokemon '%s' nao encontrado :(\n", x);
         return 0;
     }
 
@@ -116,7 +119,7 @@ int busca(No* pt, char *x){
     }
 
     if(i < pt->n && strcmp(x, pt->chaves[i])==0){
-        printf("Elemento encontrado!\n");
+        printf("Pokemon '%s' encontrado! Posicao %d do No :)\n", x, i);
         return 1;
     }
 
@@ -124,44 +127,57 @@ int busca(No* pt, char *x){
 }
 
 void insere(No* pai, No* pt, char *nome){
-    if(pt==NULL){                   //Caso a árvore seja vazia
-        pt = novo_no(0);
-        pt->chaves[0] = nome;
-        pt->n++;
+    char *copia = strdup(nome);     //Faço uma cópia temporária do novo nome com strdup para que nenhum nome seja sobreescrito na próxima chamada de 'insere()' quando voltar para o menu
 
-        printf("Elemento '%s' inserido na primeira posicao da raiz...\n", nome);
+    if(raiz == NULL){               //Caso a árvore seja VAZIA
+        raiz = novo_no(0);
+        raiz->chaves[0] = copia;
+        raiz->n++;
+        printf("Elemento '%s' inserido na primeira posicao da raiz ;)\n", nome);
         return;
     }
 
-    //Função Busca():
+    // A partir daqui pt nunca é NULL (aogra pt = raiz ou pt = filho válido)
+
+    //Função "Busca()":
     int i = 0;
 
-    while(i < pt->n && strcmp(nome, pt->chaves[i])>0){     //Vai percorrendo a chave (Esq->Dir)
+    while(i < pt->n && strcmp(copia, pt->chaves[i])>0){     //Vai percorrendo as chaves do Nó (Esq->Dir)
         i++;
     }
 
-    if(i < pt->n && strcmp(nome, pt->chaves[i])==0){
-        printf("Elemento ja se encontra na arvore. Nenhuma acao necessaria...\n");
+    if(i < pt->n && strcmp(copia, pt->chaves[i])==0){
+        printf("Elemento ja se encontra na arvore. Nenhuma acao necessaria :|\n");
+        free(copia);
         return;
     }
     else if(pt->filhos[i] == NULL){
-        if(add_key(pt, nome)==1) return;                           //Insere a nova chave no Nó
+        // Nó folha: tenta inserir diretamente
+        if(add_key(pt, copia) != -1){
+            printf("Elemento '%s' inserido com sucesso! :)\n", nome);
+            return;
+        }
         else{
-            split(pai, pt, nome);           //Função Split
+            // Nó cheio: faz split e depois insere novamente a partir da raiz
+            split(pai, pt, copia);
+            // Após o split a chave ainda não foi inserida; reinsere a partir da raiz
+            insere(NULL, raiz, nome);
+            free(copia);
         }
     }
-    else if(pt->filhos[i]->n >= 2*D){
-        split(pt, pt->filhos[i], nome);
+    else if(pt->filhos[i]->n >= 2*D){       //Caso o número de elementos no Nó filho exceda o máximo. Propriedade (a)
+        split(pt, pt->filhos[i], copia);
 
-        i = 0;                                                 //Recalculando o valor de 'i'
-        while(i < pt->n && strcmp(nome, pt->chaves[i])>0){     //Vai percorrendo a chave (Esq->Dir)
+        i = 0;                              //Recalculando o valor de 'i'
+        while(i < pt->n && strcmp(copia, pt->chaves[i])>0){
             i++;
         }
-
+        free(copia);
         return insere(pt, pt->filhos[i], nome);  //Desce para o filho[i]
     }
 
     else{
+        free(copia);
         return insere(pt, pt->filhos[i], nome);  //Desce para o filho[i]
     }
 }
@@ -173,69 +189,82 @@ int add_key(No* pt, char *key){
     */
     int nmr = pt->n;                                    //Número de chaves no Nó
 
-    if(nmr<2*D){                                        //Caso a quantidade de elementos dentro do Nó não exceda o máximo 
+    if(nmr < 2*D){
+        if(nmr == 0){                                   //Caso não haja nenhuma chave no Nó
+            pt->chaves[0] = key;
+            pt->n++;
+            return 0;
+        }
+
         for(int i=0; i<nmr; i++){
-            if(strcmp(key, pt->chaves[i])<0){           //Caso a key seja ALFABETICAMENTE MENOR que todos os elementos no Nó
+            if(strcmp(key, pt->chaves[i])<0){           //Caso a key seja ALFABETICAMENTE MENOR
                 
                 for(int j=nmr; j>i; j--){
                     pt->chaves[j] = pt->chaves[j-1];
                 }
     
-                pt->chaves[i] = key;                    //Adicionar na posição i após mover todos os outros elementos para a direita
+                pt->chaves[i] = key;
                 pt->n++;
-                return i;                               //Retorna a posição em que 'key' foi inserido
+                return i;
             }    
-            else if(i==nmr-1){                          //Caso a key seja ALFABETICAMENTE MAIOR que todos os elementos no Nó 
+            else if(i==nmr-1){                          //Caso a key seja ALFABETICAMENTE MAIOR que todos
                 pt->chaves[nmr] = key;
                 pt->n++;
-                return i;                               //Retorna a posição em que 'key' foi inserido
+                return nmr;
             }   
         }
     }
-    return -1;                                           //Caso a quantidade de elementos dentro do Nó VÁ EXCEDER o máximo com a adição de 'key'
+    return -1;                                          //Caso a quantidade de elementos dentro do Nó VÁ EXCEDER o máximo           
 }
 
-void split(No* pai, No* pt, char *key){
+void split(No* pai, No* pt,  char *key){                //No livro do Jayme ele define essa função como 'cisão'
+    int meio = D;
+
     int posi = -1;
-    if(pai != NULL){
-        posi = add_key(pai, pt->chaves[D-1]);       //Primeiro, adicionamos esse elemento no nó do pai
+    if(pai != NULL){                                    //Caso não estejamos na raiz
+        posi = add_key(pai, strdup(pt->chaves[meio]));  //Sobe o elemento do meio para o pai
     }
 
-    char* chave_meio = pt->chaves[D-1];             //Salvando a chave do meio
-    No* no_dir = novo_no(D-1);
+    char* chave_meio = pt->chaves[meio];                //Salvando a chave do meio
+    No* no_dir = novo_no(0);
 
-    int j=D;
-    for(int i=0; i<D-1; i++){
-        no_dir->chaves[i] = pt->chaves[j];          //Copiando os valores da metade direita do filho de pt no novo 'no_dir'
+    //Copia a metade direita (após o meio) para no_dir [COPIANDO CHAVES {pt -> no_dir}]
+    int j = meio + 1;
+    int k = 0;
+    while(j < 2*D){
+        no_dir->chaves[k] = pt->chaves[j];
+        pt->chaves[j] = NULL;                       //Vai limpando os elementos do nó original(No* pt) asism que eles são copiados para no_dir
+        
+        no_dir->n++;
         j++;
+        k++;
     }
-    for(int j=D-1; j<2*D; j++){
-        if(pt->chaves[j] != NULL){                  //Limpa os valores do nó antigo que já foram copiados para 'no_dir'
-            pt->chaves[j] = NULL;
-            pt->n--;
-        }
-    }
+
+    // Limpa o elemento do meio e a metade direita do nó original (No* pt)
+    pt->chaves[meio] = NULL;
+    pt->n = meio;                                   //pt agora tem 'meio' chaves (metade esquerda)
 
     //Caso pt NÃO seja folha
-    if(pt->filhos[0] != NULL){
-        int j=0;
-        for(int i=D-1; i<2*D+1; i++){
-            no_dir->filhos[j] = pt->filhos[i];
-            j++;
-
-            pt->filhos[i] = NULL;                   //Limpa os filhos de pt depois de serem copiados para 'no_dir'
+    if(pt->filhos[0] != NULL){                      
+    //Copia a metade direita (após o meio) para no_dir [COPIANDO NÓS FILHO {pt -> no_dir}]
+        int f = meio + 1;
+        int g = 0;
+        while(f <= 2*D){
+            no_dir->filhos[g] = pt->filhos[f];
+            pt->filhos[f] = NULL;
+            f++;
+            g++;
         }
     }
 
     //Cuidando da redistribuição dos nós 'splitados' de pt
-    
     if(posi != -1){
         for(int k=pai->n; k>posi+1; k--){
-            pai->filhos[k] = pai->filhos[k-1];          //Passando os filhos do nó pai para direita, "abrindo" espaço para 'no_dir'
+            pai->filhos[k] = pai->filhos[k-1];
         }
         pai->filhos[posi+1] = no_dir;
     }
-    else{                               //No caso de fazer o split da RAIZ (Não possui 'pai')
+    else{                                           //Split da RAIZ (não possui 'pai')
         raiz = novo_no(0);
         raiz->chaves[0] = chave_meio;
         raiz->n++;
