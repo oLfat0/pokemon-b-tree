@@ -217,7 +217,18 @@ pt->n++;
 
 \subsection{Split}
 
-A função \texttt{split()} é acionada quando há sobrecarga em uma página, ou seja, quando o número de chaves atinge o máximo permitido ($2 \times D$). Ela divide a página em duas — metade esquerda e metade direita — e sobe o elemento do meio para o nó pai, que se torna o pai dessas duas subdivisões.
+A função \texttt{split()} é acionada quando há sobrecarga em uma página, ou seja, quando o número de chaves atinge o máximo permitido ($2 \times D$). Ela divide a página em duas — metade esquerda e metade direita — e sobe o elemento do meio para o nó pai, que se torna o pai dessas duas subdivisões.\\
+
+Optou-se pela estratégia de divisão preventiva (\textit{top-down}): antes de
+descer para um filho, verifica-se se ele está cheio e, em caso afirmativo,
+ele é dividido. Isso garante que a inserção em uma folha nunca encontre um
+nó cheio, simplificando o tratamento recursivo.\\
+
+Em um nó cheio com $2D$ chaves (índices $0$ a $2D-1$), o elemento do meio
+escolhido para subir ao pai é o de índice \texttt{meio = D}. Assim, a metade
+esquerda permanece com $D$ chaves (índices $0$ a $D-1$) no nó original, o
+elemento de índice $D$ sobe, e a metade direita (índices $D+1$ a $2D-1$)
+forma o novo nó.
 
 Para realizar a divisão, é criado um novo nó \texttt{no\_dir} que recebe as chaves a partir do centro da página original. As chaves da metade direita são copiadas para \texttt{no\_dir} e seus espaços originais são transformados em \texttt{NULL}, limpando o nó original:
 
@@ -331,11 +342,12 @@ else {
 % -------------------------------------------------------
 \section{Dificuldades Encontradas}
 
-\textbf{Split:} A principal dificuldade na função \texttt{split()} foi compreender que a divisão não deveria ocorrer apenas no filho, mas também tratar o pai quando ele fosse exceder o limite de chaves. Inicialmente estava sendo realizado apenas o split do filho, ignorando a propagação para o nó pai.
+\textbf{Split:} A principal dificuldade na função \texttt{split()} foi compreender que a divisão não deveria ocorrer apenas no filho, mas também tratar o pai quando ele fosse exceder o limite de chaves. Inicialmente estava sendo realizado apenas o split do filho, ignorando a propagação para o nó pai.\\
 
-\textbf{Insere:} Na função \texttt{insere()} encontramos um problema com a primeira chamada sendo realizada com o pai \texttt{NULL} — sempre que um novo Pokémon era inserido, o anterior era sobrescrito pelo novo. O problema foi resolvido tratando corretamente o caso da raiz e garantindo que cada string fosse armazenada de forma independente com \texttt{strdup}.
+\textbf{Insere:} Na função \texttt{insere()} encontramos um problema com a primeira chamada sendo realizada com o pai \texttt{NULL} — sempre que um novo Pokémon era inserido, o anterior era sobrescrito pelo novo. O problema foi resolvido tratando corretamente o caso da raiz e garantindo que cada string fosse armazenada de forma independente com \texttt{strdup}.\\
 
-\textbf{Ordenação das chaves:} Manter as chaves ordenadas dentro de cada nó foi um desafio, pois diversas situações podiam ocorrer ao inserir um novo elemento — no início, no meio ou no final. Para resolver isso, foi criada a função auxiliar \texttt{add\_key()}, que centraliza e trata todas essas situações.
+\textbf{Ordenação das chaves:} Manter as chaves ordenadas dentro de cada nó foi um desafio, pois diversas situações podiam ocorrer ao inserir um novo elemento — no início, no meio ou no final. Para resolver isso, foi criada a função auxiliar\\
+\texttt{add\_key()}, que centraliza e trata todas essas situações.\\
 
 \textbf{Busca:} A dificuldade foi visualizar como percorrer os nós em ordem alfabética. O uso da função \texttt{strcmp()} facilitou muito esse processo, permitindo comparar as chaves de forma simples e decidir se deveríamos avançar para a direita ou descer para um filho.
 
@@ -354,7 +366,7 @@ Conforme especificado no enunciado do trabalho, a operação de \textbf{remoçã
 O trabalho foi desenvolvido utilizando o seguinte ambiente:
 
 \begin{itemize}
-    \item \textbf{Sistema Operacional:} Windows
+    \item \textbf{Sistema Operacional:} Windows 11
     \item \textbf{Editor:} Visual Studio Code
     \item \textbf{Compilador:} GCC versão 14.2.0
 \end{itemize}
@@ -367,13 +379,13 @@ O trabalho foi desenvolvido utilizando o seguinte ambiente:
 Para compilar o programa, execute o seguinte comando no terminal dentro do diretório do projeto:
 
 \begin{lstlisting}[language=bash, numbers=none]
-gcc main_b-tree.c -o btree
+gcc main_b-tree.c -o btree.exe
 \end{lstlisting}
 
 Para executar o programa:
 
 \begin{lstlisting}[language=bash, numbers=none]
-./btree
+./btree.exe
 \end{lstlisting}
 
 \textbf{Observação:} O arquivo \texttt{pokemon\_names.txt} deve estar no mesmo diretório do executável para que o carregamento automático dos Pokémons funcione corretamente.
@@ -387,6 +399,11 @@ Para executar o programa:
 SZWARCFITER, J. L.; MARKENZON, L.
 \textit{Estruturas de Dados e seus Algoritmos}.
 3. ed. Rio de Janeiro: LTC, 2010.
+
+\bibitem{costa2026}
+COSTA, Anderson Bessa da.
+\textit{Trabalho Prático -- Disciplina de Estruturas de Dados}.
+Faculdade de Computação (FACOM), Universidade Federal de Mato Grosso do Sul (UFMS), 2026.
 
 \end{thebibliography}
 
