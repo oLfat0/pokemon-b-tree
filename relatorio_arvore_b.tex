@@ -1,0 +1,393 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[brazil]{babel}
+\usepackage[a4paper,margin=2.5cm]{geometry}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{indentfirst}
+\usepackage{titlesec}
+
+% Configuração do estilo de código
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+\definecolor{codegreen}{rgb}{0,0.6,0}
+
+\lstdefinestyle{cstyle}{
+    backgroundcolor=\color{backcolour},
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{blue},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,
+    breaklines=true,
+    captionpos=b,
+    keepspaces=true,
+    numbers=left,
+    numbersep=5pt,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    tabsize=2,
+    language=C
+}
+
+\lstset{style=cstyle}
+
+\begin{document}
+
+% -------------------------------------------------------
+% CAPA
+% -------------------------------------------------------
+\begin{titlepage}
+    \centering
+    {\Large Universidade Federal de Mato Grosso do Sul\par}
+    \vspace{0.8cm}
+    \includegraphics[width=5cm]{logo_ufms.png}
+    \vspace{0.8cm}\\
+    {\large Faculdade de Computação\par}
+    {\large Estruturas de Dados\par}
+    {\large Professor: Anderson Bessa da Costa\par}
+    \vfill
+    {\Huge\bfseries Trabalho Prático -- Árvore B\par}
+    \vfill
+    \large
+    Otávio Gabriel de Oliveira Santana -- 202519050583\\
+    Guilherme Duarte Balduino -- 202519050680\\
+    \vfill
+    Campo Grande -- MS\\
+    Maio/Junho 2026
+\end{titlepage}
+
+% -------------------------------------------------------
+% SUMÁRIO
+% -------------------------------------------------------
+\tableofcontents
+\newpage
+
+% -------------------------------------------------------
+% 1. INTRODUÇÃO
+% -------------------------------------------------------
+\section{Introdução}
+
+As árvores B são árvores balanceadas utilizadas para facilitar e minimizar o acesso a memórias secundárias. As árvores B possuem diversas características, entre elas: múltiplas chaves por nó; alta ordem (quanto maior a sua ordem, mais chaves por nó, minimizando o número de acessos); e balanceamento garantido — todas as folhas estão sempre no mesmo nível, independentemente da ordem de inserção.
+
+As árvores B possuem uma série de regras que devem ser seguidas:
+
+\begin{enumerate}
+    \item[(i)] a raiz é uma folha ou possui no mínimo dois filhos;
+    \item[(ii)] cada nó interno (exceto a raiz) possui no mínimo $d + 1$ filhos;
+    \item[(iii)] cada nó possui no máximo $2d + 1$ filhos;
+    \item[(iv)] todas as folhas estão no mesmo nível.
+\end{enumerate}
+
+Neste trabalho tivemos como objetivo montar uma árvore B com ordem $D \geq 2$, aplicando duas funções principais (Busca e Inserção) e algumas subfunções auxiliares. O objetivo final era construir uma árvore B funcional que funcionasse como uma espécie de \textit{pokédex}, utilizando como material de estudos o livro \textit{Estruturas de Dados e seus Algoritmos} de Jayme Szwarcfiter e Liane Markenzon.
+
+% -------------------------------------------------------
+% 2. INSTRUÇÕES
+% -------------------------------------------------------
+\section{Instruções}
+
+Foi instruído que seguíssemos as lógicas e algoritmos apresentados por Jayme como base para os estudos na implementação de uma árvore B. Teríamos acesso às bibliotecas padrões da linguagem C (ANSI C).
+
+Há de ser instituída uma implementação do tipo \texttt{struct} que representasse os nós da árvore, onde cada nó deveria armazenar um conjunto de chaves (\textit{strings}) e ponteiros para seus filhos, conforme a definição da estrutura. A ordem da árvore deveria ser fornecida pelo usuário no início do programa, como forma de torná-la mais interativa (sendo $D \geq 2$).
+
+Foi entregue pelo professor um arquivo contendo o nome de Pokémons que deveriam ser inseridos na árvore de maneira automática. Após a inserção dos nomes, o menu deveria ser apresentado, dando ao usuário as seguintes opções de navegação:
+
+\begin{lstlisting}[language={}, numbers=none, backgroundcolor=\color{backcolour}]
+// ----- // ----- // ARVORE B // ----- // ----- //
+[1] - Buscar
+[2] - Inserir
+[9] - Finalizar
+-------------------------------
+Entre com a sua opcao:
+\end{lstlisting}
+
+Com o seguinte comportamento:
+
+\begin{itemize}
+    \item \textbf{Buscar:} lê uma chave \texttt{x} e realiza sua busca na árvore B, informando se ela foi encontrada e, quando aplicável, a posição onde se encontra;
+    \item \textbf{Inserir:} lê uma chave \texttt{x} e realiza sua inserção na árvore B;
+    \item \textbf{Finalizar:} encerra a execução do programa.
+\end{itemize}
+
+Sem a necessidade de implementar uma função de remoção.
+
+% -------------------------------------------------------
+% 3. IMPLEMENTAÇÃO
+% -------------------------------------------------------
+\section{Implementação}
+
+\subsection{Struct}
+
+De início foi implementado o \texttt{struct no}, que serviria de base para qualquer operação que iríamos realizar:
+
+\begin{lstlisting}
+typedef struct no
+{
+    int n;                     // Quantidade de chaves no No
+    char *chaves[2*D_MAX];     // Lista de Strings -> Cada chave e uma String
+    struct no* filhos[2*D_MAX+1];
+} No;
+
+No* raiz = NULL; // Definicao da raiz principal utilizada nas operacoes
+int D;
+\end{lstlisting}
+
+Escolhemos utilizar ponteiros para strings alocadas dinamicamente com \texttt{strdup}, permitindo que $D$ seja dinâmico. Cada \texttt{chaves[i]} é um \texttt{char*} que aponta para uma string alocada independentemente na memória, evitando que uma string sobrescreva outra.
+
+\subsection{Menu}
+
+Sendo seu retorno um \texttt{int} (1, 2, 9 ou 0), a função \texttt{menu()} foi definida como a única interface visível ao usuário, com três opções possíveis: 1 para Busca, 2 para Inserção e 9 para encerrar o programa. Caso nenhuma opção válida seja selecionada, o programa informa o erro e retorna 0.
+
+\begin{lstlisting}
+while (1) {
+    if (menu() == 9) { // Caso o usuario selecione [9] - Finalizar
+        break;
+    }
+}
+\end{lstlisting}
+
+A função \texttt{menu()} é chamada na \texttt{main} dentro de um loop que só é quebrado quando o usuário digita 9.
+
+\subsection{Busca}
+
+Realizada de forma recursiva, a função \texttt{busca()} determina se um elemento está na estrutura ou não. O caso base é verificado checando se o ponteiro \texttt{No*} é nulo — caso seja, o elemento não está na árvore:
+
+\begin{lstlisting}
+int busca(No* pt, char *x) {
+    if (pt == NULL) {
+        printf("Pokemon '%s' nao encontrado :(\n", x);
+        return 0;
+    }
+\end{lstlisting}
+
+Caso contrário, percorremos as chaves do nó da esquerda para a direita utilizando uma dupla condição no \texttt{while}:
+
+\begin{lstlisting}
+int i = 0;
+// Vai percorrendo as chaves (Esq->Dir)
+while (i < pt->n && strcmp(x, pt->chaves[i]) > 0) {
+    i++;
+}
+\end{lstlisting}
+
+A função \texttt{strcmp}, nativa da biblioteca \texttt{<string.h>}, faz a comparação entre duas strings e retorna, sendo \texttt{Y} o valor retornado:
+
+\begin{itemize}
+    \item \texttt{Y > 0} — caso o primeiro parâmetro seja alfabeticamente maior que o segundo;
+    \item \texttt{Y == 0} — caso sejam iguais;
+    \item \texttt{Y < 0} — caso o primeiro parâmetro seja alfabeticamente menor que o segundo.
+\end{itemize}
+
+Esta dupla condição dentro do \texttt{while} garante que \texttt{i} não ultrapasse o limite do nó e que avance enquanto a chave buscada for maior. Ao sair do loop, há dois possíveis cenários:
+
+\textbf{Caso 1 — \texttt{strcmp} retorna 0:} a string foi encontrada dentro do nó.
+
+\begin{lstlisting}
+if (i < pt->n && strcmp(x, pt->chaves[i]) == 0) {
+    printf("Pokemon '%s' encontrado! Posicao %d de seu No :)\n", x, i);
+    return 1;
+}
+\end{lstlisting}
+
+\textbf{Caso 2 — \texttt{i} ultrapassou seu valor máximo:} o elemento não está neste nó. A busca desce recursivamente por \texttt{filhos[i]}, que é o único filho onde o elemento poderia estar:
+
+\begin{lstlisting}
+return busca(pt->filhos[i], x); // Desce para o filho[i]
+\end{lstlisting}
+
+\subsection{Add\_Key}
+
+A função \texttt{add\_key()} é utilizada tanto na função \texttt{insere()} quanto na função \texttt{split()}, sendo responsável por inserir um novo elemento dentro de uma página já existente, mantendo a integridade e a organização alfabética da árvore.
+
+A função percorre as chaves do nó da esquerda para a direita comparando alfabeticamente com a nova chave. Ao encontrar a posição correta, ela desloca as demais chaves à sua direita uma posição à frente e insere o elemento no local correto:
+
+\begin{lstlisting}
+for (int j = nmr; j > i; j--) {
+    pt->chaves[j] = pt->chaves[j-1];
+}
+pt->chaves[i] = key;
+pt->n++;
+\end{lstlisting}
+
+\subsection{Split}
+
+A função \texttt{split()} é acionada quando há sobrecarga em uma página, ou seja, quando o número de chaves atinge o máximo permitido ($2 \times D$). Ela divide a página em duas — metade esquerda e metade direita — e sobe o elemento do meio para o nó pai, que se torna o pai dessas duas subdivisões.
+
+Para realizar a divisão, é criado um novo nó \texttt{no\_dir} que recebe as chaves a partir do centro da página original. As chaves da metade direita são copiadas para \texttt{no\_dir} e seus espaços originais são transformados em \texttt{NULL}, limpando o nó original:
+
+\begin{lstlisting}
+while (j < 2*D) {
+    no_dir->chaves[k] = pt->chaves[j];
+    pt->chaves[j] = NULL; // Limpa o elemento do no original
+    no_dir->n++;
+    j++; k++;
+}
+\end{lstlisting}
+
+O nó original \texttt{pt} passa a representar apenas a metade esquerda, com \texttt{pt->n = meio}.
+
+Caso o nó dividido \textbf{não seja uma folha}, os filhos da metade direita também precisam ser transferidos para o \texttt{no\_dir}, garantindo que a árvore não perca os ponteiros para esses nós:
+
+\begin{lstlisting}
+if (pt->filhos[0] != NULL) {
+    while (f <= 2*D) {
+        no_dir->filhos[g] = pt->filhos[f];
+        pt->filhos[f] = NULL;
+        f++; g++;
+    }
+}
+\end{lstlisting}
+
+Por fim, cuida-se da redistribuição dos ponteiros dos filhos. Caso o nó dividido \textbf{não seja a raiz} (\texttt{posi != -1}), o \texttt{no\_dir} é encaixado como filho do pai na posição correta, empurrando os filhos subsequentes uma posição para a direita:
+
+\begin{lstlisting}
+for (int k = pai->n; k > posi+1; k--) {
+    pai->filhos[k] = pai->filhos[k-1];
+}
+pai->filhos[posi+1] = no_dir;
+\end{lstlisting}
+
+Caso a página sobrecarregada seja a própria raiz (\texttt{posi == -1}), o elemento do meio se torna uma nova raiz e as duas metades tornam-se seus filhos:
+
+\begin{lstlisting}
+raiz = novo_no(0);
+raiz->chaves[0] = chave_meio;
+raiz->n++;
+raiz->filhos[0] = pt;
+raiz->filhos[1] = no_dir;
+\end{lstlisting}
+
+\subsection{Inserção}
+
+A função \texttt{insere()} é responsável por inserir um novo elemento na árvore B, garantindo que todas as propriedades da estrutura sejam mantidas após a inserção. Ela trata as seguintes condições:
+
+\textbf{Condição 1 — Árvore vazia:} caso a raiz seja \texttt{NULL}, um novo nó é criado e a chave é inserida diretamente nele.
+
+\begin{lstlisting}
+if (raiz == NULL) {
+    raiz = novo_no(0);
+    raiz->chaves[0] = nome;
+    raiz->n++;
+    return;
+}
+\end{lstlisting}
+
+\textbf{Condição 2 — Raiz cheia:} caso a raiz esteja cheia antes de descer, é realizado um split preventivo para garantir que sempre haja espaço ao descer.
+
+\begin{lstlisting}
+if (pai == NULL && pt->n >= 2*D) {
+    split(NULL, pt);
+    pt = raiz;
+}
+\end{lstlisting}
+
+\textbf{Condição 3 — Elemento já existe:} caso o elemento já esteja na árvore, nenhuma ação é realizada, evitando duplicatas.
+
+\begin{lstlisting}
+if (i < pt->n && strcmp(nome, pt->chaves[i]) == 0) {
+    printf("Elemento ja se encontra na arvore.\n");
+    return;
+}
+\end{lstlisting}
+
+\textbf{Condição 4 — Chegou na folha:} \texttt{filhos[i] == NULL} indica que estamos numa folha. A função \texttt{add\_key()} é acionada para inserir a chave na posição correta.
+
+\begin{lstlisting}
+else if (pt->filhos[i] == NULL) {
+    add_key(pt, nome);
+    return;
+}
+\end{lstlisting}
+
+\textbf{Condição 5 — Filho cheio:} caso o filho para onde desceríamos esteja cheio, é realizado um split preventivo nele antes de descer. Como o split reorganiza as chaves do pai, o valor de \texttt{i} é recalculado antes de descer recursivamente.
+
+\begin{lstlisting}
+else if (pt->filhos[i]->n >= 2*D) {
+    split(pt, pt->filhos[i]);
+    i = 0; // Recalcula i pois o pai foi reorganizado
+    while (i < pt->n && strcmp(nome, pt->chaves[i]) > 0) {
+        i++;
+    }
+    return insere(pt, pt->filhos[i], nome);
+}
+\end{lstlisting}
+
+\textbf{Condição 6 — Filho não cheio:} caso o filho não esteja cheio, a função desce recursivamente por ele.
+
+\begin{lstlisting}
+else {
+    return insere(pt, pt->filhos[i], nome);
+}
+\end{lstlisting}
+
+% -------------------------------------------------------
+% 4. DIFICULDADES ENCONTRADAS
+% -------------------------------------------------------
+\section{Dificuldades Encontradas}
+
+\textbf{Split:} A principal dificuldade na função \texttt{split()} foi compreender que a divisão não deveria ocorrer apenas no filho, mas também tratar o pai quando ele fosse exceder o limite de chaves. Inicialmente estava sendo realizado apenas o split do filho, ignorando a propagação para o nó pai.
+
+\textbf{Insere:} Na função \texttt{insere()} encontramos um problema com a primeira chamada sendo realizada com o pai \texttt{NULL} — sempre que um novo Pokémon era inserido, o anterior era sobrescrito pelo novo. O problema foi resolvido tratando corretamente o caso da raiz e garantindo que cada string fosse armazenada de forma independente com \texttt{strdup}.
+
+\textbf{Ordenação das chaves:} Manter as chaves ordenadas dentro de cada nó foi um desafio, pois diversas situações podiam ocorrer ao inserir um novo elemento — no início, no meio ou no final. Para resolver isso, foi criada a função auxiliar \texttt{add\_key()}, que centraliza e trata todas essas situações.
+
+\textbf{Busca:} A dificuldade foi visualizar como percorrer os nós em ordem alfabética. O uso da função \texttt{strcmp()} facilitou muito esse processo, permitindo comparar as chaves de forma simples e decidir se deveríamos avançar para a direita ou descer para um filho.
+
+% -------------------------------------------------------
+% 5. FUNCIONALIDADES NÃO IMPLEMENTADAS
+% -------------------------------------------------------
+\section{Funcionalidades Não Implementadas}
+
+Conforme especificado no enunciado do trabalho, a operação de \textbf{remoção} não foi implementada.
+
+% -------------------------------------------------------
+% 6. AMBIENTE DE DESENVOLVIMENTO
+% -------------------------------------------------------
+\section{Ambiente de Desenvolvimento}
+
+O trabalho foi desenvolvido utilizando o seguinte ambiente:
+
+\begin{itemize}
+    \item \textbf{Sistema Operacional:} Windows
+    \item \textbf{Editor:} Visual Studio Code
+    \item \textbf{Compilador:} GCC versão 14.2.0
+\end{itemize}
+
+% -------------------------------------------------------
+% 7. INSTRUÇÕES DE COMPILAÇÃO E EXECUÇÃO
+% -------------------------------------------------------
+\section{Instruções de Compilação e Execução}
+
+Para compilar o programa, execute o seguinte comando no terminal dentro do diretório do projeto:
+
+\begin{lstlisting}[language=bash, numbers=none]
+gcc main_b-tree.c -o btree
+\end{lstlisting}
+
+Para executar o programa:
+
+\begin{lstlisting}[language=bash, numbers=none]
+./btree
+\end{lstlisting}
+
+\textbf{Observação:} O arquivo \texttt{pokemon\_names.txt} deve estar no mesmo diretório do executável para que o carregamento automático dos Pokémons funcione corretamente.
+
+% -------------------------------------------------------
+% REFERÊNCIAS
+% -------------------------------------------------------
+\begin{thebibliography}{1}
+
+\bibitem{szwarcfiter2010}
+SZWARCFITER, J. L.; MARKENZON, L.
+\textit{Estruturas de Dados e seus Algoritmos}.
+3. ed. Rio de Janeiro: LTC, 2010.
+
+\end{thebibliography}
+
+\end{document}
