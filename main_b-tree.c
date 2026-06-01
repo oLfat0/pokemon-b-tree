@@ -30,7 +30,7 @@ esses ponteiros indicam λ.
 #include <stdlib.h>
 #include <string.h>
 #define D_MAX 10
-
+#define D_MIN 2
 typedef struct no
 {
     int n;                        //Quantidade de chaves no Nó
@@ -54,6 +54,9 @@ int main(){
     scanf("%d", &D);
     if(D > D_MAX){
         printf("Ordem excedida. Por favor, selecione um valor abaixo do maximo (D_MAX = %d)\n", D_MAX);
+        return 0;
+    }else if(D < D_MIN){
+        printf("Ordem muito pequena. Por favor, selecione um valor acima do mínimo (D_MIN = %d)\n", D_MIN);
         return 0;
     }   
 
